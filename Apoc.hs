@@ -1,23 +1,32 @@
-{- | This module is used for CPSC 449 for the Apocalypse assignment.
+{- |
+Module      : Main
+Description : Template to get you started on the CPSC 449 Winter 2016 Apocalypse assignment.
+Copyright   : Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
+License     : Permission to use, copy, modify, distribute and sell this software
+              and its documentation for any purpose is hereby granted without fee, provided
+              that the above copyright notice appear in all copies and that both that
+              copyright notice and this permission notice appear in supporting
+              documentation. The University of Calgary makes no representations about the
+              suitability of this software for any purpose. It is provided "as is" without
+              express or implied warranty.
+Maintainer  : rkremer@ucalgary.ca
+Stability   : experimental
+Portability : ghc 7.10.2 - 7.10.3
+
+This module is used for CPSC 449 for the Apocalypse assignment.
 
 Feel free to modify this file as you see fit.
 
-Copyright: Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
-Permission to use, copy, modify, distribute and sell this software
-and its documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation. The University of Calgary makes no representations about the
-suitability of this software for any purpose. It is provided "as is" without
-express or implied warranty.
-
 -}
 
-module Main(main) where
+module Main (
+      -- * Main
+      main, main',
+      -- * Utility functions
+      replace, replace2
+      ) where
 
-import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
-import Data.List
 import System.Environment
 import System.IO.Unsafe
 import ApocTools
@@ -36,6 +45,11 @@ main = main' (unsafePerformIO getArgs)
 -}
 main'           :: [String] -> IO()
 main' args = do
+    putStrLn $ show initBoard
+    gameLoop initBoard
+
+{-
+main' args = do
     putStrLn "\nThe initial board:"
     print initBoard
 
@@ -53,6 +67,8 @@ main' args = do
                                                    (getFromBoard (theBoard initBoard) ((fromJust move) !! 0)))
                                          ((fromJust move) !! 0)
                                          E))
+-}
+
 
 ---2D list utility functions-------------------------------------------------------
 
@@ -66,3 +82,25 @@ replace xs n elem = let (ys,zs) = splitAt n xs
 -- | Replaces the (x,y)th element in a list of lists with a new element.
 replace2        :: [[a]] -> (Int,Int) -> a -> [[a]]
 replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
+
+---Game loop functions-------------------------------------------------------------
+
+gameLoop :: GameState -> IO ()
+gameLoop state = do
+    input <- getInput
+    let newState = nextGameState state input
+    putStrLn $ show newState
+    if isGameOver newState then return () else gameLoop newState
+
+getInput :: IO ()
+getInput = return ()
+
+isGameOver :: GameState -> Bool
+isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 -- TODO - check pawn count
+
+nextGameState :: GameState -> () -> GameState
+nextGameState state input = GameState (Passed)
+                                      ((blackPen state)+1)
+                                      (Passed)
+                                      (whitePen state)
+                                      (theBoard state)
