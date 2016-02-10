@@ -43,11 +43,39 @@ main = main' (unsafePerformIO getArgs)
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
 -}
+
 main'           :: [String] -> IO()
+main' args 
+  | lengArgs == 0 = interactiveMode
+	| lengArgs == 2 && ((head args) `elem` strategyList) && ((last args) `elem` strategyList)= startGame (head args) (last args)
+	| otherwise = putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
+	where lengArgs = length args
+			
+prtStrategyListFormat = (foldr (++) "" ((map (\x -> "  "++x++"\n") strategyList)))
+
+strategyList = ["Human","Greedy"]
+
+interactiveMode = do 
+	putStrLn "Possible Strategies:"
+	putStr prtStrategyListFormat
+	putStrLn "Enter the strategy for BLACK:"
+	bStrat <- getLine
+	if (not (bStrat `elem` strategyList)) then putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat) else putStrLn bStrat
+	putStrLn "Enter the strategy for White:"
+	wStrat <- getLine
+	if (not (bStrat `elem` strategyList)) then putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat) else putStrLn wStrat
+	startGame bStrat wStrat
+
+startGame bStrat wStrat = do
+	putStrLn $ show initBoard
+	gameLoop initBoard
+
+
+{-main'           :: [String] -> IO()
 main' args = do
     putStrLn $ show initBoard
     gameLoop initBoard
-
+-}
 {-
 main' args = do
     putStrLn "\nThe initial board:"
