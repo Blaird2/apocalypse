@@ -28,9 +28,11 @@ module Main (
 
 import Data.Maybe (fromJust, isNothing)
 import System.Environment
+import System.Exit
 import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
+import ApocStrategyGreedy
 
 
 ---Main-------------------------------------------------------------
@@ -45,37 +47,42 @@ main = main' (unsafePerformIO getArgs)
 -}
 
 main'           :: [String] -> IO()
-main' args 
-  | lengArgs == 0 = interactiveMode
-	| lengArgs == 2 && ((head args) `elem` strategyList) && ((last args) `elem` strategyList)= startGame (head args) (last args)
-	| otherwise = putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
-	where lengArgs = length args
-			
+main' args
+    | lenArgs == 0 = do
+        strategies <- readStrategies
+        gameLoop initBoard (fst strategies) (snd strategies)
+    | lenArgs == 2 = do
+        bStrat <- strategyFromName (head args)
+        wStrat <- strategyFromName (last args)
+        gameLoop initBoard bStrat wStrat
+    | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
+    where lenArgs = length args
+
+prtStrategyListFormat :: String
 prtStrategyListFormat = (foldr (++) "" ((map (\x -> "  "++x++"\n") strategyList)))
+    where strategyList = ["human", "greedy"]
 
-strategyList = ["Human","Greedy"]
+strategyFromName :: String -> IO Chooser
+strategyFromName "human" = return human
+strategyFromName "greedy" = return greedy
+strategyFromName _ = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
 
-interactiveMode = do 
-	putStrLn "Possible Strategies:"
-	putStr prtStrategyListFormat
-	putStrLn "Enter the strategy for BLACK:"
-	bStrat <- getLine
-	if (not (bStrat `elem` strategyList)) then putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat) else putStrLn bStrat
-	putStrLn "Enter the strategy for White:"
-	wStrat <- getLine
-	if (not (bStrat `elem` strategyList)) then putStr ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat) else putStrLn wStrat
-	startGame bStrat wStrat
+readStrategies :: IO (Chooser, Chooser)
+readStrategies = do
+    putStrLn "Possible Strategies:"
+    putStr prtStrategyListFormat
+    bStrat <- readStrategy "black"
+    wStrat <- readStrategy "white"
+    return (bStrat, wStrat)
 
-startGame bStrat wStrat = do
-	putStrLn $ show initBoard
-	gameLoop initBoard
+readStrategy :: String -> IO Chooser
+readStrategy player = do
+    putStrLn ("Enter the strategy for "++player++":")
+    stratName <- getLine
+    strategy <- strategyFromName stratName
+    putStrLn stratName
+    return strategy
 
-
-{-main'           :: [String] -> IO()
-main' args = do
-    putStrLn $ show initBoard
-    gameLoop initBoard
--}
 {-
 main' args = do
     putStrLn "\nThe initial board:"
@@ -113,15 +120,15 @@ replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
 
 ---Game loop functions-------------------------------------------------------------
 
-gameLoop :: GameState -> IO ()
-gameLoop state = do
-    input <- getInput
+gameLoop :: GameState -> Chooser -> Chooser -> IO ()
+gameLoop state bStrat wStrat = do
+    input <- getInput bStrat wStrat
     let newState = nextGameState state input
     putStrLn $ show newState
-    if isGameOver newState then return () else gameLoop newState
+    if isGameOver newState then return () else gameLoop newState bStrat wStrat
 
-getInput :: IO ()
-getInput = return ()
+getInput :: Chooser -> Chooser -> IO ()
+getInput bStrat wStrat = return ()
 
 isGameOver :: GameState -> Bool
 isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 -- TODO - check pawn count
