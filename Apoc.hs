@@ -59,6 +59,35 @@ main' args
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
 
+---Movement Checking functions------------------------------------------------------
+
+-- | Determines whether the move was a normal turn, or a pawn placement
+isValidMove :: GameState -> Player -> [a] -> Bool
+isValidMove b _ x:[] = isValidPlacePawn (theboard b) x
+isValidMove b player x:xs:[] = isValidPlay (theboard b) x xs
+
+-- | Returns whether the pawn placement was a valid move
+isValidPlacePawn :: Board -> (Int, Int) -> Bool
+isValidPlacePawn board x = if((getFromBoard board x) == E ) then True else False
+
+-- | Determines all the valid moves for the pieces on the board
+isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool 
+isValidPlay board player from to
+    | (((playerOf piece) == player) && (piece == WP)) = ((fst to == fst from) && (snd to == ((snd from)+1))) || (((playerOf (pieceOf (getFromBoard to))) == Black) && (((fst from)+1) || ((fst from)-1)) && (snd to == ((snd from)+1)))
+    | (((playerOf piece) == player) && (piece == BP)) = ((fst to == fst from) && (snd to == ((snd from)-1))) || (((playerOf (pieceOf (getFromBoard to))) == White) && (((fst from)+1) || ((fst from)-1)) && (snd to == ((snd from)-1)))
+    | (((playerOf piece) == player) && (piece == WK)) = knightMove from to
+    | (((playerOf piece) == player) && (piece == BK)) = knightMove from to
+    | otherwise = False
+    where piece = getFromBoard board from 
+
+-- | Determines the validity of a knight movement
+knightMove :: (Int, Int) -> (Int, Int) -> Bool
+knightMove from to 
+    | ((fst to == ((fst from)+2)) && ((snd to == ((snd from)-1)) || snd to == ((snd from)+1))) = True
+    | ((fst to == ((fst from)-2)) && ((snd to == ((snd from)-1)) || snd to == ((snd from)+1))) = True
+    | ((snd to == ((snd from)+2)) && ((fst to == ((fst from)-1)) || fst to == ((fst from)+1))) = True
+    | ((snd to == ((snd from)-2)) && ((fst to == ((fst from)-1)) || fst to == ((fst from)+1))) = True
+    | otherwise = False
 
 ---Game loop functions-------------------------------------------------------------
 
