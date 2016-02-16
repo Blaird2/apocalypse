@@ -49,10 +49,12 @@ main'           :: [String] -> IO()
 main' args
     | lenArgs == 0 = do
         strategies <- readStrategies
+        putStrLn $ show initBoard
         gameLoop initBoard (fst strategies) (snd strategies)
     | lenArgs == 2 = do
         bStrat <- strategyFromName (head args)
         wStrat <- strategyFromName (last args)
+        putStrLn $ show initBoard
         gameLoop initBoard bStrat wStrat
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
