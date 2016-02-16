@@ -94,33 +94,67 @@ readStrategy player = do
 -- | The game loop; plays out a full game using two given strategies, printing a trace as it runs, and ending once the game is over
 gameLoop :: GameState -> Chooser -> Chooser -> IO ()
 gameLoop state bStrat wStrat = do
-    newState <- nextGameState state bStrat wStrat
+    input <- getInput state bStrat wStrat
+    let newState = nextGameState state input
     putStrLn $ show newState
-    if isGameOver newState then return () else gameLoop newState bStrat wStrat
+    if isGameOver newState input then return () else gameLoop newState bStrat wStrat
+
+-- | Reads the next moves from the strategies, and converts them into Played values, checking if they were valid
+getInput :: GameState -> Chooser -> Chooser -> IO (Played, Played)
+getInput state bStrat wStrat = do
+    -- TODO - pawn placement?
+    bMove <- bStrat state Normal Black
+    wMove <- wStrat state Normal White
+    -- TODO - check if valid, convert to Played
+    return (Passed, Passed)
 
 -- | Generates the next game state, using the moves chosen by the two strategies
-nextGameState :: GameState -> Chooser -> Chooser -> IO GameState
-nextGameState state bStrat wStrat = do
-    -- TODO - get and apply the moves
-    return $ GameState
-        (Passed)
-        ((blackPen state)+1)
-        (Passed)
-        (whitePen state)
-        (theBoard state)
+nextGameState :: GameState -> (Played, Played) -> GameState
+nextGameState state (bMove, wMove) = GameState
+    bMove
+    ((blackPen state) + (getPenaltyValue bMove))
+    wMove
+    ((whitePen state) + (getPenaltyValue wMove))
+    (theBoard state) -- TODO - apply the moves
 
 -- | Determines if the game is now over; either because a player has accumulated a penalty
-isGameOver :: GameState -> Bool
-isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 || count2 (theBoard state) BP == 0 || count2 (theBoard state) WP == 0
+isGameOver :: GameState -> (Played, Played) -> Bool
+isGameOver state (bMove, wMove)
+         | bMove == Passed && wMove == Passed = True
+         | blackPen state >= 2 = True
+         | whitePen state >= 2 = True
+         | count2 (theBoard state) BP == 0 = True
+         | count2 (theBoard state) WP == 0 = True
+         | otherwise = False
 
 -- | Determines which player has won; 'Nothing' means a draw if isGameOver is true, otherwise it means the game isn't over yet
-getWinner :: GameState -> Maybe Player
-getWinner state
+getWinner :: GameState -> (Played, Played) -> Maybe Player
+getWinner state (bMove, wMove)
+        | bMove == Passed && wMove == Passed =
+            if bPawns > wPawns
+                then Just Black
+                else if wPawns > bPawns
+                    then Just White
+                    else Nothing
         | whiteLoss && not blackLoss = Just Black
         | blackLoss && not whiteLoss = Just White
         | otherwise = Nothing
-        where blackLoss = blackPen state >= 2 || count2 (theBoard state) BP == 0
+        where bPawns = count2 (theBoard state) BP
+              wPawns = count2 (theBoard state) WP
+              blackLoss = blackPen state >= 2 || count2 (theBoard state) BP == 0
               whiteLoss = whitePen state >= 2 || count2 (theBoard state) WP == 0
+
+-- | Returns the penalty value of a given move
+getPenaltyValue :: Played -> Int
+getPenaltyValue (Played _)              = 0
+getPenaltyValue (Passed)                = 0
+getPenaltyValue (Goofed _)              = 1
+getPenaltyValue (Init)                  = 0
+getPenaltyValue (UpgradedPawn2Knight _) = 0
+getPenaltyValue (PlacedPawn _)          = 0
+getPenaltyValue (BadPlacedPawn _)       = 1
+getPenaltyValue (NullPlacedPawn)        = 0
+getPenaltyValue (None)                  = 0
 
 
 ---2D list utility functions-------------------------------------------------------
