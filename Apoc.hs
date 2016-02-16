@@ -58,6 +58,9 @@ main' args
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
 
+
+---Game loop functions-------------------------------------------------------------
+
 prtStrategyListFormat :: String
 prtStrategyListFormat = (foldr (++) "" ((map (\x -> "  "++x++"\n") strategyList)))
     where strategyList = ["human", "greedy"]
@@ -83,43 +86,6 @@ readStrategy player = do
     putStrLn stratName
     return strategy
 
-{-
-main' args = do
-    putStrLn "\nThe initial board:"
-    print initBoard
-
-    putStrLn $ "\nThe initial board with back human (the placeholder for human) strategy having played one move\n"
-               ++ "(clearly illegal as we must play in rounds!):"
-    move <- human (initBoard) Normal Black
-    putStrLn (show $ GameState (if move==Nothing
-                                then Passed
-                                else Played (head (fromJust move), head (tail (fromJust move))))
-                               (blackPen initBoard)
-                               (Passed)
-                               (whitePen initBoard)
-                               (replace2 (replace2 (theBoard initBoard)
-                                                   ((fromJust move) !! 1)
-                                                   (getFromBoard (theBoard initBoard) ((fromJust move) !! 0)))
-                                         ((fromJust move) !! 0)
-                                         E))
--}
-
-
----2D list utility functions-------------------------------------------------------
-
--- | Replaces the nth element in a row with a new element.
-replace         :: [a] -> Int -> a -> [a]
-replace xs n elem = let (ys,zs) = splitAt n xs
-                     in (if null zs then (if null ys then [] else init ys) else ys)
-                        ++ [elem]
-                        ++ (if null zs then [] else tail zs)
-
--- | Replaces the (x,y)th element in a list of lists with a new element.
-replace2        :: [[a]] -> (Int,Int) -> a -> [[a]]
-replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
-
----Game loop functions-------------------------------------------------------------
-
 gameLoop :: GameState -> Chooser -> Chooser -> IO ()
 gameLoop state bStrat wStrat = do
     input <- getInput bStrat wStrat
@@ -131,7 +97,12 @@ getInput :: Chooser -> Chooser -> IO ()
 getInput bStrat wStrat = return ()
 
 isGameOver :: GameState -> Bool
-isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 -- TODO - check pawn count
+isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 || count2 (theBoard state) BP == 0 || count2 (theBoard state) WP == 0
+
+getWinner :: GameState -> Player
+getWinner state
+    | (whitePen state) >= 2 || count2 (theBoard state) WP == 0 = Black
+    | (blackPen state) >= 2 || count2 (theBoard state) BP == 0 = White
 
 nextGameState :: GameState -> () -> GameState
 nextGameState state input = GameState (Passed)
@@ -139,3 +110,25 @@ nextGameState state input = GameState (Passed)
                                       (Passed)
                                       (whitePen state)
                                       (theBoard state)
+
+
+---2D list utility functions-------------------------------------------------------
+
+-- | Replaces the nth element in a row with a new element.
+replace :: [a] -> Int -> a -> [a]
+replace xs n elem = let (ys,zs) = splitAt n xs
+                     in (if null zs then (if null ys then [] else init ys) else ys)
+                        ++ [elem]
+                        ++ (if null zs then [] else tail zs)
+
+-- | Replaces the (x,y)th element in a list of lists with a new element.
+replace2 :: [[a]] -> (Int,Int) -> a -> [[a]]
+replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
+
+-- | Counts the occurences of an element in a list
+count :: (Eq a) => [a] -> a -> Int
+count xs x = length $ filter (== x) xs
+
+-- | Counts the occurences of an element in a list of lists
+count2 :: (Eq a) => [[a]] -> a -> Int
+count2 xs x = sum $ map (\xs -> count xs x) xs
