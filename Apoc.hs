@@ -59,35 +59,6 @@ main' args
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
 
----Movement Checking functions------------------------------------------------------
-
--- | Determines whether the move was a normal turn, or a pawn placement
-isValidMove :: GameState -> Player -> [a] -> Bool
-isValidMove b _ x:[] = isValidPlacePawn (theboard b) x
-isValidMove b player x:xs:[] = isValidPlay (theboard b) x xs
-
--- | Returns whether the pawn placement was a valid move
-isValidPlacePawn :: Board -> (Int, Int) -> Bool
-isValidPlacePawn board x = if((getFromBoard board x) == E ) then True else False
-
--- | Determines all the valid moves for the pieces on the board
-isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool 
-isValidPlay board player from to
-    | (((playerOf piece) == player) && (piece == WP)) = ((fst to == fst from) && (snd to == ((snd from)+1))) || (((playerOf (pieceOf (getFromBoard to))) == Black) && (((fst from)+1) || ((fst from)-1)) && (snd to == ((snd from)+1)))
-    | (((playerOf piece) == player) && (piece == BP)) = ((fst to == fst from) && (snd to == ((snd from)-1))) || (((playerOf (pieceOf (getFromBoard to))) == White) && (((fst from)+1) || ((fst from)-1)) && (snd to == ((snd from)-1)))
-    | (((playerOf piece) == player) && (piece == WK)) = knightMove from to
-    | (((playerOf piece) == player) && (piece == BK)) = knightMove from to
-    | otherwise = False
-    where piece = getFromBoard board from 
-
--- | Determines the validity of a knight movement
-knightMove :: (Int, Int) -> (Int, Int) -> Bool
-knightMove from to 
-    | ((fst to == ((fst from)+2)) && ((snd to == ((snd from)-1)) || snd to == ((snd from)+1))) = True
-    | ((fst to == ((fst from)-2)) && ((snd to == ((snd from)-1)) || snd to == ((snd from)+1))) = True
-    | ((snd to == ((snd from)+2)) && ((fst to == ((fst from)-1)) || fst to == ((fst from)+1))) = True
-    | ((snd to == ((snd from)-2)) && ((fst to == ((fst from)-1)) || fst to == ((fst from)+1))) = True
-    | otherwise = False
 
 ---Game loop functions-------------------------------------------------------------
 
@@ -184,6 +155,55 @@ getPenaltyValue (PlacedPawn _)          = 0
 getPenaltyValue (BadPlacedPawn _)       = 1
 getPenaltyValue (NullPlacedPawn)        = 0
 getPenaltyValue (None)                  = 0
+
+
+---Movement Checking functions------------------------------------------------------
+
+-- | Determines whether the move was a normal turn, or a pawn placement
+isValidMove :: Board -> Player -> [(Int, Int)] -> Bool
+isValidMove board player [x, y] = isValidPlay board player x y
+isValidMove board _ [x] = isValidPlacePawn board x
+
+-- | Determines all the valid moves for the pieces on the board
+isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
+isValidPlay board player from to
+    -- TODO - maybe range check 'to'?
+    | playerOf pieceFrom == player && (pieceFrom == WhitePawn || pieceFrom == BlackPawn) =
+        isPawnMoveValid board player from to
+    | playerOf pieceFrom == player && (pieceFrom == WhiteKnight || pieceFrom == BlackKnight) =
+        isKnightMoveValid from to
+    | otherwise = False
+    where pieceFrom = pieceOf $ getFromBoard board from
+          pieceTo = pieceOf $ getFromBoard board to
+
+-- | Returns whether the pawn placement was a valid move
+isValidPlacePawn :: Board -> (Int, Int) -> Bool
+isValidPlacePawn board x = getFromBoard board x == E
+
+-- | Determines the validity of a pawn movement
+isPawnMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
+isPawnMoveValid board player (fromX, fromY) to
+       | to == (fromX, fromY + forwards) = True
+       | to == (fromX + 1, fromY + forwards) && playerOf pieceTo /= player = True
+       | to == (fromX - 1, fromY + forwards) && playerOf pieceTo /= player = True
+       | otherwise = False
+       where forwards = case player of
+               Black -> -1
+               White -> 1
+             pieceTo = pieceOf $ getFromBoard board to
+
+-- | Determines the validity of a knight movement
+isKnightMoveValid :: (Int, Int) -> (Int, Int) -> Bool
+isKnightMoveValid (fromX, fromY) to
+         | to == (fromX + 1, fromY + 2) = True
+         | to == (fromX + 1, fromY - 2) = True
+         | to == (fromX - 1, fromY + 2) = True
+         | to == (fromX - 1, fromY - 2) = True
+         | to == (fromX + 2, fromY + 1) = True
+         | to == (fromX + 2, fromY - 1) = True
+         | to == (fromX - 2, fromY + 1) = True
+         | to == (fromX - 2, fromY - 1) = True
+         | otherwise = False
 
 
 ---2D list utility functions-------------------------------------------------------
