@@ -1,3 +1,5 @@
 *.hi
 *.o
 Apoc
+
+test/test.hs
