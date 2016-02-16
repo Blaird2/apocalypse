@@ -101,12 +101,13 @@ gameLoop state bStrat wStrat = do
 
 -- | Reads the next moves from the strategies, and converts them into Played values, checking if they were valid
 getInput :: GameState -> Chooser -> Chooser -> IO (Played, Played)
-getInput state bStrat wStrat = do
-    -- TODO - pawn placement?
-    bMove <- bStrat state Normal Black
-    wMove <- wStrat state Normal White
-    -- TODO - check if valid, convert to Played
-    return (Passed, Passed)
+getInput state bStrat wStrat = if False -- TODO - pawn placement
+    then do
+        return (None, None)
+    else do
+        bMove <- bStrat state Normal Black
+        wMove <- wStrat state Normal White
+        return (moveToPlayed (theBoard state) Black bMove, moveToPlayed (theBoard state) White wMove)
 
 -- | Generates the next game state, using the moves chosen by the two strategies
 nextGameState :: GameState -> (Played, Played) -> GameState
@@ -158,6 +159,13 @@ getPenaltyValue (None)                  = 0
 
 
 ---Movement Checking functions------------------------------------------------------
+
+-- | Converts a move into a Played value
+moveToPlayed :: Board -> Player -> Maybe [(Int, Int)] -> Played
+moveToPlayed _ _ Nothing = Passed
+moveToPlayed board player (Just [from, to]) = if isValidMove board player [from, to]
+    then Played (from, to)
+    else Goofed (from, to)
 
 -- | Determines whether the move was a normal turn, or a pawn placement
 isValidMove :: Board -> Player -> [(Int, Int)] -> Bool
