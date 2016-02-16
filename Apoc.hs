@@ -45,7 +45,6 @@ main = main' (unsafePerformIO getArgs)
      1. call our program from GHCi in the usual way
      2. run from the command line by calling this function with the value from (getArgs)
 -}
-
 main'           :: [String] -> IO()
 main' args
     | lenArgs == 0 = do
@@ -61,15 +60,18 @@ main' args
 
 ---Game loop functions-------------------------------------------------------------
 
+-- | Returns the printable list of available strategies
 prtStrategyListFormat :: String
 prtStrategyListFormat = (foldr (++) "" ((map (\x -> "  "++x++"\n") strategyList)))
     where strategyList = ["human", "greedy"]
 
+-- | Converts a name to the respective strategy
 strategyFromName :: String -> IO Chooser
 strategyFromName "human" = return human
 strategyFromName "greedy" = return greedy
 strategyFromName _ = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
 
+-- | Queries for and reads the two strategies to be used from the command line
 readStrategies :: IO (Chooser, Chooser)
 readStrategies = do
     putStrLn "Possible Strategies:"
@@ -78,6 +80,7 @@ readStrategies = do
     wStrat <- readStrategy "white"
     return (bStrat, wStrat)
 
+-- | Queries for and reads a strategy from the command line
 readStrategy :: String -> IO Chooser
 readStrategy player = do
     putStrLn ("Enter the strategy for "++player++":")
@@ -86,12 +89,14 @@ readStrategy player = do
     putStrLn stratName
     return strategy
 
+-- | The game loop; plays out a full game using two given strategies, printing a trace as it runs, and ending once the game is over
 gameLoop :: GameState -> Chooser -> Chooser -> IO ()
 gameLoop state bStrat wStrat = do
     newState <- nextGameState state bStrat wStrat
     putStrLn $ show newState
     if isGameOver newState then return () else gameLoop newState bStrat wStrat
 
+-- | Generates the next game state, using the moves chosen by the two strategies
 nextGameState :: GameState -> Chooser -> Chooser -> IO GameState
 nextGameState state bStrat wStrat = do
     -- TODO - get and apply the moves
@@ -102,9 +107,11 @@ nextGameState state bStrat wStrat = do
         (whitePen state)
         (theBoard state)
 
+-- | Determines if the game is now over; either because a player has accumulated a penalty
 isGameOver :: GameState -> Bool
 isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 || count2 (theBoard state) BP == 0 || count2 (theBoard state) WP == 0
 
+-- | Determines which player has won; 'Nothing' means a draw if isGameOver is true, otherwise it means the game isn't over yet
 getWinner :: GameState -> Maybe Player
 getWinner state
         | whiteLoss && not blackLoss = Just Black
@@ -119,9 +126,9 @@ getWinner state
 -- | Replaces the nth element in a row with a new element.
 replace :: [a] -> Int -> a -> [a]
 replace xs n elem = let (ys,zs) = splitAt n xs
-                     in (if null zs then (if null ys then [] else init ys) else ys)
-                        ++ [elem]
-                        ++ (if null zs then [] else tail zs)
+    in (if null zs then (if null ys then [] else init ys) else ys)
+        ++ [elem]
+        ++ (if null zs then [] else tail zs)
 
 -- | Replaces the (x,y)th element in a list of lists with a new element.
 replace2 :: [[a]] -> (Int,Int) -> a -> [[a]]
