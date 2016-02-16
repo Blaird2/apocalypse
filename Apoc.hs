@@ -88,28 +88,30 @@ readStrategy player = do
 
 gameLoop :: GameState -> Chooser -> Chooser -> IO ()
 gameLoop state bStrat wStrat = do
-    input <- getInput bStrat wStrat
-    let newState = nextGameState state input
+    newState <- nextGameState state bStrat wStrat
     putStrLn $ show newState
     if isGameOver newState then return () else gameLoop newState bStrat wStrat
 
-getInput :: Chooser -> Chooser -> IO ()
-getInput bStrat wStrat = return ()
+nextGameState :: GameState -> Chooser -> Chooser -> IO GameState
+nextGameState state bStrat wStrat = do
+    -- TODO - get and apply the moves
+    return $ GameState
+        (Passed)
+        ((blackPen state)+1)
+        (Passed)
+        (whitePen state)
+        (theBoard state)
 
 isGameOver :: GameState -> Bool
 isGameOver state = (blackPen state) >= 2 || (whitePen state) >= 2 || count2 (theBoard state) BP == 0 || count2 (theBoard state) WP == 0
 
-getWinner :: GameState -> Player
+getWinner :: GameState -> Maybe Player
 getWinner state
-    | (whitePen state) >= 2 || count2 (theBoard state) WP == 0 = Black
-    | (blackPen state) >= 2 || count2 (theBoard state) BP == 0 = White
-
-nextGameState :: GameState -> () -> GameState
-nextGameState state input = GameState (Passed)
-                                      ((blackPen state)+1)
-                                      (Passed)
-                                      (whitePen state)
-                                      (theBoard state)
+        | whiteLoss && not blackLoss = Just Black
+        | blackLoss && not whiteLoss = Just White
+        | otherwise = Nothing
+        where blackLoss = blackPen state >= 2 || count2 (theBoard state) BP == 0
+              whiteLoss = whitePen state >= 2 || count2 (theBoard state) WP == 0
 
 
 ---2D list utility functions-------------------------------------------------------
