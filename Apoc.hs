@@ -35,7 +35,7 @@ import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
 import ApocStrategyGreedy
-
+import ApocHelpers
 
 ---Main-------------------------------------------------------------
 
@@ -165,7 +165,7 @@ applyOnBoard' board (Played (fromB,toB)) (Played (fromW,toW))
         | (pieceFromB == BlackKnight) && (pieceFromW == WhitePawn) && clash   = replaceElements (replaceElements board fromW toW) fromB toB
         | (pieceFromB == BlackPawn) && (pieceFromW == WhiteKnight) && clash   = replaceElements (replaceElements board fromB toB) fromW toW
         | otherwise                                                           = replaceElements (replaceElements board fromB toB) fromW toW
-        where pieceFromB = pieceOf $ getFromBoard board fromB 
+        where pieceFromB = pieceOf $ getFromBoard board fromB
               pieceFromW = pieceOf $ getFromBoard board fromW
               clash      = (toB == toW)
 applyOnboard' board (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW))
@@ -278,6 +278,7 @@ isValidMove :: Board -> Player -> [(Int, Int)] -> Bool
 isValidMove board player [x, y] = isValidPlay board player x y
 isValidMove board _ [x] = isValidPlacePawn board x
 
+<<<<<<< Updated upstream
 -- | Determines all the valid moves for the pieces on the board
 isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isValidPlay board player from to
@@ -322,6 +323,8 @@ isKnightMoveValid board player (fromX, fromY) to
          | otherwise = False
          where pieceAtTo = playerOf $ pieceOf $ getFromBoard board to
 
+=======
+>>>>>>> Stashed changes
 
 ---2D list utility functions-------------------------------------------------------
 
