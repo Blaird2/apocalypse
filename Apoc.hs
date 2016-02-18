@@ -174,10 +174,12 @@ applyOnboard' board (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW))
 
 isSwap :: Played -> Played -> Bool
 isSwap (Played (fromB,toB)) (Played (fromW,toW)) = if ((fromB == toW) && (toB == fromW)) then True else False
+isSwap _ _ = False
 
 isClash :: Played -> Played -> Bool
 isClash (Played (fromB,toB)) (Played (fromW,toW))           = if (toW == toB) then True else False
 isClash (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW)) = if (toW == toB) then True else False
+isClash _ _ = False
 
 applyOnPlayer :: Board -> Played -> Board
 applyOnPlayer board (Played (from,to)) = replaceElements board from to 
