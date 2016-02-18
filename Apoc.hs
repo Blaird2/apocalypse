@@ -201,7 +201,7 @@ isValidMove board _ [x] = isValidPlacePawn board x
 -- | Determines all the valid moves for the pieces on the board
 isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isValidPlay board player from to
-    -- TODO - maybe range check 'to'?
+    | getCellFrom == '_' = False
     | playerOf pieceFrom == player && (pieceFrom == WhitePawn || pieceFrom == BlackPawn) =
         isPawnMoveValid board player from to
     | playerOf pieceFrom == player && (pieceFrom == WhiteKnight || pieceFrom == BlackKnight) =
@@ -209,6 +209,7 @@ isValidPlay board player from to
     | otherwise = False
     where pieceFrom = pieceOf $ getFromBoard board from
           pieceTo = pieceOf $ getFromBoard board to
+          getCellFrom = cell2Char $ getFromBoard board from 
 
 -- | Returns whether the pawn placement was a valid move
 isValidPlacePawn :: Board -> (Int, Int) -> Bool
@@ -217,7 +218,7 @@ isValidPlacePawn board x = getFromBoard board x == E
 -- | Determines the validity of a pawn movement
 isPawnMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isPawnMoveValid board player (fromX, fromY) to
-       | to == (fromX, fromY + forwards) = True
+       | (to == (fromX, fromY + forwards)) && (getCellTo == '_') = True
        | to == (fromX + 1, fromY + forwards) && playerOf pieceTo /= player = True
        | to == (fromX - 1, fromY + forwards) && playerOf pieceTo /= player = True
        | otherwise = False
@@ -225,6 +226,7 @@ isPawnMoveValid board player (fromX, fromY) to
                Black -> -1
                White -> 1
              pieceTo = pieceOf $ getFromBoard board to
+             getCellTo = cell2Char $ getFromBoard board to 
 
 -- | Determines the validity of a knight movement
 isKnightMoveValid :: (Int, Int) -> (Int, Int) -> Bool
