@@ -116,7 +116,33 @@ nextGameState state (bMove, wMove) = GameState
     ((blackPen state) + (getPenaltyValue bMove))
     wMove
     ((whitePen state) + (getPenaltyValue wMove))
-    (theBoard state) -- TODO - apply the moves
+    (applyOnBoard (theBoard state) bMove wMove) -- TODO - apply the moves
+
+-- | Applying the Moves On the board
+applyOnBoard :: Board -> Played -> Played -> Board
+applyOnBoard board (Played (fromB,toB)) (Played (fromW,toW))
+        | (fromB == toW) && (toB == fromW)                                    = replaceSwapElements board fromB toB
+        | (pieceFromB == BlackKnight) && (pieceFromW == WhiteKnight) && clash = replaceClashElements (replaceClashElements board fromB toB) fromW toW
+        | (pieceFromB == BlackPawn) && (pieceFromW == WhitePawn) && clash     = replaceClashElements (replaceClashElements board fromB toB) fromW toW
+        | (pieceFromB == BlackKnight) && (pieceFromW == WhitePawn) && clash   = replaceElements (replaceElements board fromW toW) fromB toB
+        | (pieceFromB == BlackPawn) && (pieceFromW == WhiteKnight) && clash   = replaceElements (replaceElements board fromB toB) fromW toW
+        | otherwise                                                           = replaceElements (replaceElements board fromB toB) fromW toW
+        where pieceFromB = pieceOf $ getFromBoard board fromB 
+              pieceFromW = pieceOf $ getFromBoard board fromW
+              clash      = (toB == toW)
+applyOnBoard board (Played (fromB, toB)) _ = replaceElements board fromB toB
+applyOnBoard board _ (Played (fromW, toW)) = replaceElements board fromW toW
+applyOnBoard board _ _ = board
+
+-- | Replacing the elements for normal moves
+replaceElements :: Board -> (Int,Int) -> (Int,Int) -> Board
+replaceElements board from to = replace2 (replace2 board to (getFromBoard board from)) from E
+-- | Replacing the elements when two pieces are swapped
+replaceSwapElements :: Board -> (Int,Int) -> (Int,Int) -> Board
+replaceSwapElements board from to = replace2 (replace2 board to (getFromBoard board from)) from (getFromBoard board to)
+-- | Replacing the elements when a clash appears between two pieces
+replaceClashElements :: Board -> (Int,Int) -> (Int, Int) -> Board
+replaceClashElements board from to = replace2 (replace2 board to E) from E
 
 -- | Determines if the game is now over; either because a player has accumulated a penalty
 isGameOver :: GameState -> (Played, Played) -> Bool
