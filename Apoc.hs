@@ -150,12 +150,12 @@ nextGameState state (bMove, wMove) = GameState
     (applyOnBoard (theBoard state) bMove wMove) -- TODO - apply the moves
 
 -- | Applying the Moves On the board
--- | Applying the Moves On the board
 applyOnBoard :: Board -> Played -> Played -> Board
 applyOnBoard board playedB playedW
         | (isClash playedB playedW) || (isSwap playedB playedW) = applyOnBoard' board playedB playedW
         | otherwise = applyOnPlayer (applyOnPlayer board playedB) playedW
 
+-- | Called when there are clashes or swapped pieces that require special handling
 applyOnBoard' :: Board -> Played -> Played -> Board
 applyOnBoard' board (Played (fromB,toB)) (Played (fromW,toW))
         | (fromB == toW) && (toB == fromW)                                    = replaceSwapElements board fromB toB
@@ -171,16 +171,18 @@ applyOnboard' board (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW))
         | (toB == toW) = replaceClashElements (replaceClashElements board fromB toB) fromW toW
         | otherwise = replaceElements (replaceElements board fromW toW) fromB toB
 
-
+-- | Given the moves, checks whether there is a need to swap the pieces
 isSwap :: Played -> Played -> Bool
 isSwap (Played (fromB,toB)) (Played (fromW,toW)) = if ((fromB == toW) && (toB == fromW)) then True else False
 isSwap _ _ = False
 
+-- | Given the moves, checks whether there is a clash between the moves
 isClash :: Played -> Played -> Bool
 isClash (Played (fromB,toB)) (Played (fromW,toW))           = if (toW == toB) then True else False
 isClash (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW)) = if (toW == toB) then True else False
 isClash _ _ = False
 
+-- | Given the moves apply the moves for each player
 applyOnPlayer :: Board -> Played -> Board
 applyOnPlayer board (Played (from,to)) = replaceElements board from to 
 applyOnPlayer board (PlacedPawn (from, to)) = replaceElements board from to
