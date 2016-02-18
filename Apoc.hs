@@ -28,6 +28,7 @@ module Main (
 
 import Data.List
 import Data.Maybe (fromJust, isNothing)
+import Data.Char
 import System.Environment
 import System.Exit
 import System.IO.Unsafe
@@ -88,7 +89,7 @@ readStrategy :: String -> IO Chooser
 readStrategy player = do
     putStrLn ("Enter the strategy for "++player++":")
     stratName <- getLine
-    strategy <- strategyFromName stratName
+    strategy <- strategyFromName (map toLower stratName)
     putStrLn stratName
     return strategy
 
@@ -98,7 +99,7 @@ gameLoop state bStrat wStrat = do
     input <- getInput state bStrat wStrat
     let newState = nextGameState state input
     putStrLn $ show newState
-    if isGameOver newState input then return () else gameLoop newState bStrat wStrat
+    if isGameOver newState input then putStrLn (gameOverMessage newState bStrat wStrat) else gameLoop newState bStrat wStrat
 
 -- | Reads the next moves from the strategies, and converts them into Played values, checking if they were valid
 getInput :: GameState -> Chooser -> Chooser -> IO (Played, Played)
@@ -211,6 +212,20 @@ isGameOver state (bMove, wMove)
          | count2 (theBoard state) BP == 0 = True
          | count2 (theBoard state) WP == 0 = True
          | otherwise = False
+
+-- | The Format to display the Game Over Message
+gameOverMessage :: GameState -> Chooser -> Chooser -> String
+gameOverMessage state bStrat wStrat
+         | (whitePen state >= 2) || (count2 (theBoard state) WP == 0) = "Black wins!  Black ("++prtStrat bStrat++"): "++bPawns++"  White ("++prtStrat wStrat++"): "++wPawns
+         | (blackPen state >= 2) || (count2 (theBoard state) BP == 0) = "White wins!  Black ("++prtStrat bStrat++"): "++bPawns++"  White ("++prtStrat wStrat++"): "++wPawns
+         | otherwise = "Everyone Passed! Draw"
+        where bPawns = show $ count2 (theBoard state) BP
+              wPawns = show $ count2 (theBoard state) WP
+
+-- | Converts the passed in strategy to the coresponding string
+prtStrat :: Chooser -> String
+prtStrat human = "human"
+prtStrat greedy = "greedy"
 
 -- | Determines which player has won; 'Nothing' means a draw if isGameOver is true, otherwise it means the game isn't over yet
 getWinner :: GameState -> (Played, Played) -> Maybe Player
