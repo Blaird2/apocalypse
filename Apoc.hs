@@ -26,6 +26,7 @@ module Main (
       replace, replace2
       ) where
 
+import Data.List
 import Data.Maybe (fromJust, isNothing)
 import System.Environment
 import System.Exit
@@ -101,13 +102,43 @@ gameLoop state bStrat wStrat = do
 
 -- | Reads the next moves from the strategies, and converts them into Played values, checking if they were valid
 getInput :: GameState -> Chooser -> Chooser -> IO (Played, Played)
-getInput state bStrat wStrat = if False -- TODO - pawn placement
+getInput state bStrat wStrat = if isPawnPlacementTurn (theBoard state)
     then do
-        return (None, None)
+        bPlayed <- doPawnPlacement state bStrat Black
+        wPlayed <- doPawnPlacement state wStrat White
+        return (bPlayed, wPlayed)
     else do
         bMove <- bStrat state Normal Black
         wMove <- wStrat state Normal White
-        return (moveToPlayed (theBoard state) Black bMove, moveToPlayed (theBoard state) White wMove)
+        let bPlayed = moveToPlayed (theBoard state) Black bMove
+        let wPlayed = moveToPlayed (theBoard state) White wMove
+        return (bPlayed, wPlayed)
+
+-- | Determines if pawn placement must happen this turn
+isPawnPlacementTurn :: Board -> Bool
+isPawnPlacementTurn board = any (==BP) (board !! 0) || any (==WP) (board !! 4)
+
+-- | Performs a pawn placement turn for the given player
+doPawnPlacement :: GameState -> Chooser -> Player -> IO Played
+doPawnPlacement state strat player =
+    let board = theBoard state
+        pawnType = case player of
+            Black -> BP
+            White -> WP
+        knightType = case player of
+            Black -> BK
+            White -> WK
+        pawnRow = case player of
+            Black -> 0
+            White -> 4
+        pawnCol = findIndex (==pawnType) (board !! pawnRow)
+    in if isNothing pawnCol
+        then return None
+        else if count2 board knightType < 2
+            then return $ UpgradedPawn2Knight (fromJust pawnCol, pawnRow)
+            else do
+                move <- strat state PawnPlacement player
+                return $ pawnPlacementToPlayed board (fromJust pawnCol, pawnRow) move
 
 -- | Generates the next game state, using the moves chosen by the two strategies
 nextGameState :: GameState -> (Played, Played) -> GameState
@@ -192,6 +223,13 @@ moveToPlayed _ _ Nothing = Passed
 moveToPlayed board player (Just [from, to]) = if isValidMove board player [from, to]
     then Played (from, to)
     else Goofed (from, to)
+
+-- | Converts a pawn placement move into a Played value
+pawnPlacementToPlayed :: Board -> (Int, Int) -> Maybe [(Int, Int)] -> Played
+pawnPlacementToPlayed _ _ Nothing = NullPlacedPawn
+pawnPlacementToPlayed board from (Just [to]) = if isValidPlacePawn board to
+    then PlacedPawn (from, to)
+    else BadPlacedPawn (from, to)
 
 -- | Determines whether the move was a normal turn, or a pawn placement
 isValidMove :: Board -> Player -> [(Int, Int)] -> Bool
