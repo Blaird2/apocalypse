@@ -150,8 +150,14 @@ nextGameState state (bMove, wMove) = GameState
     (applyOnBoard (theBoard state) bMove wMove) -- TODO - apply the moves
 
 -- | Applying the Moves On the board
+-- | Applying the Moves On the board
 applyOnBoard :: Board -> Played -> Played -> Board
-applyOnBoard board (Played (fromB,toB)) (Played (fromW,toW))
+applyOnBoard board playedB playedW
+        | (isClash playedB playedW) || (isSwap playedB playedW) = applyOnBoard' board playedB playedW
+        | otherwise = applyOnPlayer (applyOnPlayer board playedB) playedW
+
+applyOnBoard' :: Board -> Played -> Played -> Board
+applyOnBoard' board (Played (fromB,toB)) (Played (fromW,toW))
         | (fromB == toW) && (toB == fromW)                                    = replaceSwapElements board fromB toB
         | (pieceFromB == BlackKnight) && (pieceFromW == WhiteKnight) && clash = replaceClashElements (replaceClashElements board fromB toB) fromW toW
         | (pieceFromB == BlackPawn) && (pieceFromW == WhitePawn) && clash     = replaceClashElements (replaceClashElements board fromB toB) fromW toW
@@ -161,9 +167,23 @@ applyOnBoard board (Played (fromB,toB)) (Played (fromW,toW))
         where pieceFromB = pieceOf $ getFromBoard board fromB 
               pieceFromW = pieceOf $ getFromBoard board fromW
               clash      = (toB == toW)
-applyOnBoard board (Played (fromB, toB)) _ = replaceElements board fromB toB
-applyOnBoard board _ (Played (fromW, toW)) = replaceElements board fromW toW
-applyOnBoard board _ _ = board
+applyOnboard' board (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW))
+        | (toB == toW) = replaceClashElements (replaceClashElements board fromB toB) fromW toW
+        | otherwise = replaceElements (replaceElements board fromW toW) fromB toB
+
+
+isSwap :: Played -> Played -> Bool
+isSwap (Played (fromB,toB)) (Played (fromW,toW)) = if ((fromB == toW) && (toB == fromW)) then True else False
+
+isClash :: Played -> Played -> Bool
+isClash (Played (fromB,toB)) (Played (fromW,toW))           = if (toW == toB) then True else False
+isClash (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW)) = if (toW == toB) then True else False
+
+applyOnPlayer :: Board -> Played -> Board
+applyOnPlayer board (Played (from,to)) = replaceElements board from to 
+applyOnPlayer board (PlacedPawn (from, to)) = replaceElements board from to
+applyOnPlayer board (UpgradedPawn2Knight location) = replaceWithKnight board location
+applyOnPlayer board _ = board  
 
 -- | Replacing the elements for normal moves
 replaceElements :: Board -> (Int,Int) -> (Int,Int) -> Board
@@ -174,6 +194,9 @@ replaceSwapElements board from to = replace2 (replace2 board to (getFromBoard bo
 -- | Replacing the elements when a clash appears between two pieces
 replaceClashElements :: Board -> (Int,Int) -> (Int, Int) -> Board
 replaceClashElements board from to = replace2 (replace2 board to E) from E
+-- | Replacing the Upgraded Pawn to Knight
+replaceWithKnight :: Board -> (Int,Int) -> Board
+replaceWithKnight board location = replace2 board location (if ((playerOf (pieceOf (getFromBoard board location))) == White) then WK else BK)
 
 -- | Determines if the game is now over; either because a player has accumulated a penalty
 isGameOver :: GameState -> (Played, Played) -> Bool
