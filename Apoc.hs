@@ -268,7 +268,7 @@ isValidPlay board player from to
     | playerOf pieceFrom == player && (pieceFrom == WhitePawn || pieceFrom == BlackPawn) =
         isPawnMoveValid board player from to
     | playerOf pieceFrom == player && (pieceFrom == WhiteKnight || pieceFrom == BlackKnight) =
-        isKnightMoveValid from to
+        isKnightMoveValid board player from to
     | otherwise = False
     where pieceFrom = pieceOf $ getFromBoard board from
           pieceTo = pieceOf $ getFromBoard board to
@@ -292,17 +292,18 @@ isPawnMoveValid board player (fromX, fromY) to
              getCellTo = cell2Char $ getFromBoard board to 
 
 -- | Determines the validity of a knight movement
-isKnightMoveValid :: (Int, Int) -> (Int, Int) -> Bool
-isKnightMoveValid (fromX, fromY) to
-         | to == (fromX + 1, fromY + 2) = True
-         | to == (fromX + 1, fromY - 2) = True
-         | to == (fromX - 1, fromY + 2) = True
-         | to == (fromX - 1, fromY - 2) = True
-         | to == (fromX + 2, fromY + 1) = True
-         | to == (fromX + 2, fromY - 1) = True
-         | to == (fromX - 2, fromY + 1) = True
-         | to == (fromX - 2, fromY - 1) = True
+isKnightMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
+isKnightMoveValid board player (fromX, fromY) to
+         | ((to == (fromX + 1, fromY + 2)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX + 1, fromY - 2)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX - 1, fromY + 2)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX - 1, fromY - 2)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX + 2, fromY + 1)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX + 2, fromY - 1)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX - 2, fromY + 1)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX - 2, fromY - 1)) && (pieceAtTo /= player)) = True
          | otherwise = False
+         where pieceAtTo = playerOf $ pieceOf $ getFromBoard board to
 
 
 ---2D list utility functions-------------------------------------------------------
