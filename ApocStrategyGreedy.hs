@@ -70,7 +70,7 @@ sortMoves board (x:xs) =
 getAllPossibleMoves :: Board -> Player -> [Move]
 getAllPossibleMoves board player =
   let pieces = getAllPieces board player
-      moves = getMovesFromPieces pieces
+      moves = getMovesFromPieces board pieces
       validMoves = filter (\x -> isValidPlay board player (fst x) (snd x)) moves
   in validMoves
 
@@ -86,72 +86,22 @@ getInRow :: (a -> Bool) -> [a] -> Int -> [Int]
 getInRow fn [] _ = []
 getInRow fn (x:xs) col = if fn x then col:(getInRow fn xs (col+1)) else getInRow fn xs (col+1)
 
-getMovesFromPieces :: [(Int, Int)] -> [Move]
-getMovesFromPieces pieces = []
+getMovesFromPieces :: Board ->  [(Int, Int)] -> [Move]
+getMovesFromPieces _ [] = []
+getMovesFromPieces board (x:xs) = let piece = filter ((rangeChecker).fst) (filter ((rangeChecker).snd) (getMovesFromSinglePiece board x)) in
+                                  (createMoveFromSinglePiece x piece)++(getMovesFromPieces board xs)
 
-{-
-getAllPossibleMoves :: Board -> Player -> [((Int, Int), [(Int, Int)])]
-getAllPossibleMoves board player = zip (isWhite board) (map (\x -> moveChecker x board player) (isWhite board))
-
-unflattenPossibleMoves :: [(Int, Int)] ->  [[(Int, Int)]] -> [Move]
-unflattenPossibleMoves [] _ = []
-unflattenPossibleMoves (x:xs) [(y:ys)]= (x,y):unflattenPossibleMoves xs (if (null y) then ys else ys)
-
-isBlack :: Board -> [(Int, Int)]
-isBlack board = isHelper 0 0 Black board
-
-isWhite :: Board -> [(Int, Int)]
-isWhite board = isHelper 0 0 White board
-
-isHelper :: Int -> Int -> Player -> Board -> [(Int, Int)]
-isHelper 5 _ _ _ = []
-isHelper x 5 player board = isHelper (x+1) 0 player board
-isHelper x y player board = if (player == Black)
-                            then  if (getFromBoard board (x, y)==BP || getFromBoard board (x, y)==BK)
-                                  then (x,y):isHelper x (y+1) player board
-                                  else isHelper x (y+1) player board
-                            else  if (getFromBoard board (x, y)==WP || getFromBoard board (x, y)==WK)
-                                  then (x,y):isHelper x (y+1) player board
-                                  else isHelper x (y+1) player board
-
-moveChecker :: (Int, Int) -> Board -> Player -> [(Int, Int)]
-moveChecker (srcX, srcY) board player = if (getFromBoard board (srcX, srcY) == BP || getFromBoard board (srcX, srcY) == WP)
-                                        then pawnMoveChecker pawnPossibleMoves pawnExpectedPiece (srcX, srcY) board player
-                                        else knightMoveChecker knightPossibleMoves (srcX, srcY) board player
-
-pawnMoveChecker :: [(Int, Int)] -> [String] -> (Int, Int) -> Board -> Player -> [(Int, Int)]
-pawnMoveChecker [] _ _ _ _ = []
-pawnMoveChecker ((posX, posY):xs) (e:es) (srcX, srcY) board player = if (player == Black)
-                                                              then  if    (getFromBoard board (srcX+posX, srcY+posY)==(fst (pawnEmptytoPiece e player)) ||  getFromBoard board (srcX+posX, srcY+posY)==(snd (pawnEmptytoPiece e player)))
-                                                                then  (srcX+posX, srcY+posY):(pawnMoveChecker xs es (srcX, srcY) board player)
-                                                                else  pawnMoveChecker xs es (srcX, srcY) board player
-                                                              else  if    (getFromBoard board (srcX-posX, srcY-posY)==(fst (pawnEmptytoPiece e player)) ||  getFromBoard board (srcX-posX, srcY-posY)==(snd (pawnEmptytoPiece e player)))
-                                                                then  (srcX-posX, srcY-posY):(pawnMoveChecker xs es (srcX, srcY) board player)
-                                                                else  pawnMoveChecker xs es (srcX, srcY) board player
-
-
-knightMoveChecker :: [(Int, Int)] -> (Int, Int) -> Board -> Player -> [(Int, Int)]
-knightMoveChecker [] _ _ _ = []
-knightMoveChecker ((posX, posY):xs) (srcX, srcY) board player = if (player == Black)
-                                                                then  if (getFromBoard board (srcX+posX, srcY+posY)/=(BK) || getFromBoard board (srcX+posX, srcY+posY)/=(BP))
-                                                                      then (srcX+posX, srcY+posY):(knightMoveChecker xs (srcX, srcY) board player)
-                                                                      else knightMoveChecker xs (srcX, srcY) board player
-                                                                else  if (getFromBoard board (srcX-posX, srcY-posY)/=(WK) || getFromBoard board (srcX-posX, srcY-posY)/=(WP))
-                                                                      then (srcX-posX, srcY-posY):(knightMoveChecker xs (srcX, srcY) board player)
-                                                                      else knightMoveChecker xs (srcX, srcY) board player
-
-
-pawnEmptytoPiece :: String -> Player -> (Cell, Cell)
-pawnEmptytoPiece "E" _ = (E, E)
-pawnEmptytoPiece "NE" White = (BK, BP)
-pawnEmptytoPiece "NE" Black = (WK, WP)
-
--- | These two statements allow for ease of checking valid moves.
-pawnPossibleMoves = [(0,1), (1,1), (1,-1)]
-pawnExpectedPiece  = ["E", "NE", "NE"]
-knightPossibleMoves = [(1,2), (1,-2), (-1,2), (-1,-2), (2,1), (2,-1), (-2,1), (-2,-1)]
-
--- | Checks to see if an integer is within the board range
 rangeChecker :: Int -> Bool
-rangeChecker x = if ((x>4)||(x<0)) then False else True
--}
+rangeChecker x = if (x < 5 && x > -1) then True else False
+
+createMoveFromSinglePiece :: (Int, Int) -> [(Int, Int)] -> [Move]
+createMoveFromSinglePiece _ [] = []
+createMoveFromSinglePiece src (x:xs) = (src, x):(createMoveFromSinglePiece src xs)
+
+-- | TODO: Double check if possible moves are legal moves possible.
+getMovesFromSinglePiece :: Board -> (Int, Int) -> [(Int, Int)]
+getMovesFromSinglePiece board (srcX, srcY) = let piece = (srcX, srcY) in case (getFromBoard board (srcX, srcY)) of
+                BP -> [(srcX, srcY-1),(srcX-1, srcY-1), (srcX+1, srcY-1)]
+                WP -> [(srcX, srcY+1),(srcX-1, srcY+1),(srcX+1, srcY+1)]
+                BK -> [(srcX+1,srcY+2), (srcX+1, srcY-2), (srcX-1, srcY+2), (srcX-1, srcY-2), (srcX+2, srcY+1), (srcX+2, srcY-1), (srcX-2, srcY+1), (srcX-2, srcY-1)]
+                WK -> [(srcX+1,srcY+2), (srcX+1, srcY-2), (srcX-1, srcY+2), (srcX-1, srcY-2), (srcX+2, srcY+1), (srcX+2, srcY-1), (srcX-2, srcY+1), (srcX-2, srcY-1)]
