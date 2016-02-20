@@ -43,7 +43,9 @@ greedyPawnPlacement :: Board -> Player -> IO (Maybe [(Int,Int)])
 greedyPawnPlacement board player = do
   let pieces = getAllPieces board player
   let validMoves = filter (\x -> validPawnPlacement board player x) pieces
-  return $ Just ([head validMoves])
+  if (length validMoves > 0 ) then return $ Just ([head validMoves]) else return Nothing
+
+
 
 validPawnPlacement :: Board -> Player -> (Int, Int) -> Bool
 validPawnPlacement board player (x,y) = if (player == Black)
