@@ -40,13 +40,15 @@ isPawnMoveValid board player (fromX, fromY) to
 -- | Determines the validity of a knight movement
 isKnightMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isKnightMoveValid board player (fromX, fromY) to
-         | ((to == (fromX + 1, fromY + 2)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX + 1, fromY - 2)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX - 1, fromY + 2)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX - 1, fromY - 2)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX + 2, fromY + 1)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX + 2, fromY - 1)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX - 2, fromY + 1)) && (pieceAtTo /= player)) = True
-         | ((to == (fromX - 2, fromY - 1)) && (pieceAtTo /= player)) = True
+         | ((to == (fromX + 1, fromY + 2)) && checked) = True
+         | ((to == (fromX + 1, fromY - 2)) && checked) = True
+         | ((to == (fromX - 1, fromY + 2)) && checked) = True
+         | ((to == (fromX - 1, fromY - 2)) && checked) = True
+         | ((to == (fromX + 2, fromY + 1)) && checked) = True
+         | ((to == (fromX + 2, fromY - 1)) && checked) = True
+         | ((to == (fromX - 2, fromY + 1)) && checked) = True
+         | ((to == (fromX - 2, fromY - 1)) && checked) = True
          | otherwise = False
          where pieceAtTo = playerOf $ pieceOf $ getFromBoard board to
+               getCellTo = getFromBoard board to
+               checked = ((getCellTo == E) || (pieceAtTo /= player))
