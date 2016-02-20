@@ -47,12 +47,16 @@ greedyPawnPlacement board player = do
 
 validPawnPlacement :: Board -> Player -> (Int, Int) -> Bool
 validPawnPlacement board player (x,y) = if (player == Black)
-                                        then  if (x == 0 )
+                                        then  if (x == 0 && ((checkKnightCount board player) < 2))
                                               then True
                                               else False
-                                        else  if (x == 4)
+                                        else  if (x == 4 && ((checkKnightCount board player) < 2))
                                               then True
                                               else False
+
+checkKnightCount :: Board -> Player -> Int
+checkKnightCount board player = count2 board (if (player == Black) then BK else WK)
+
 
 pickMove :: SortedMoves -> IO (Maybe [(Int, Int)])
 pickMove moves
