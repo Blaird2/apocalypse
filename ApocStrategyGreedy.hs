@@ -20,8 +20,7 @@ import Data.Maybe (fromJust, isNothing)
 import System.IO.Unsafe
 import ApocTools
 import ApocHelpers
-
---import System.Random
+import System.Random
 
 type Move = ((Int, Int), (Int, Int))
 data SortedMoves = SortedMoves {emptyMoves  :: [Move],
@@ -40,21 +39,15 @@ greedyNormal board player = do
   pickMove sortedMoves
 
 greedyPawnPlacement :: Board -> Player -> IO (Maybe [(Int,Int)])
-greedyPawnPlacement board player = do
-  let pieces = getAllPieces board player
-  let validMoves = filter (\x -> validPawnPlacement board player x) pieces
-  if (length validMoves > 0 ) then return $ Just ([snd $ head $ getPossibleMove board player validMoves]) else return Nothing
+greedyPawnPlacement board player = return $ Just ([validPawnPlacement 0 0 board player])
 
 
+validPawnPlacement :: Int -> Int -> Board -> Player -> (Int, Int)
+validPawnPlacement x 5 board player =  validPawnPlacement x 0 board player
+validPawnPlacement x y board player = if (getFromBoard board (x,y) == E)
+                                      then (x,y)
+                                      else validPawnPlacement x (y+1) board player
 
-validPawnPlacement :: Board -> Player -> (Int, Int) -> Bool
-validPawnPlacement board player (x,y) = if (player == Black)
-                                        then  if (x == 0 && ((checkKnightCount board player) < 2) && (getFromBoard board (x,y) == BP))
-                                              then True
-                                              else False
-                                        else  if (x == 4 && ((checkKnightCount board player) < 2) && (getFromBoard board (x,y) == WP))
-                                              then True
-                                              else False
 
 checkKnightCount :: Board -> Player -> Int
 checkKnightCount board player = count2 board (if (player == Black) then BK else WK)
@@ -67,12 +60,14 @@ pickMove moves
   | length (emptyMoves moves)  > 0 = let move = head (emptyMoves moves)  in return $ Just [fst move, snd move]
   | otherwise = return $ Nothing
 
-{-}
+
 pickRandom ::  [a] -> IO a
 pickRandom list = do
-  index <- getStdRandom (randomR, (0, (length list) -1))
-  return (list !! index)
--}
+                index <- randomRIO (0, (length list)-1)
+                return $ list !! index
+
+
+
 
 sortMoves :: Board -> [Move] -> SortedMoves
 sortMoves _ [] = SortedMoves [] [] []
