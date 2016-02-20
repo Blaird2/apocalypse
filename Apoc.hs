@@ -279,26 +279,3 @@ pawnPlacementToPlayed board from (Just [to]) = if isValidPlacePawn board to
 isValidMove :: Board -> Player -> [(Int, Int)] -> Bool
 isValidMove board player [x, y] = isValidPlay board player x y
 isValidMove board _ [x] = isValidPlacePawn board x
-
-
-
----2D list utility functions-------------------------------------------------------
-
--- | Replaces the nth element in a row with a new element.
-replace :: [a] -> Int -> a -> [a]
-replace xs n elem = let (ys,zs) = splitAt n xs
-    in (if null zs then (if null ys then [] else init ys) else ys)
-        ++ [elem]
-        ++ (if null zs then [] else tail zs)
-
--- | Replaces the (x,y)th element in a list of lists with a new element.
-replace2 :: [[a]] -> (Int,Int) -> a -> [[a]]
-replace2 xs (x,y) elem = replace xs y (replace (xs !! y) x elem)
-
--- | Counts the occurences of an element in a list
-count :: (Eq a) => [a] -> a -> Int
-count xs x = length $ filter (== x) xs
-
--- | Counts the occurences of an element in a list of lists
-count2 :: (Eq a) => [[a]] -> a -> Int
-count2 xs x = sum $ map (\xs -> count xs x) xs

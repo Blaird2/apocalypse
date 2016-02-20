@@ -40,7 +40,19 @@ greedyNormal board player = do
   pickMove sortedMoves
 
 greedyPawnPlacement :: Board -> Player -> IO (Maybe [(Int,Int)])
-greedyPawnPlacement _ _ = return (Just [(2,2)])
+greedyPawnPlacement board player = do
+  let pieces = getAllPieces board player
+  let validMoves = filter (\x -> validPawnPlacement board player x) pieces
+  return $ Just ([head validMoves])
+
+validPawnPlacement :: Board -> Player -> (Int, Int) -> Bool
+validPawnPlacement board player (x,y) = if (player == Black)
+                                        then  if (x == 0 )
+                                              then True
+                                              else False
+                                        else  if (x == 4)
+                                              then True
+                                              else False
 
 pickMove :: SortedMoves -> IO (Maybe [(Int, Int)])
 pickMove moves
