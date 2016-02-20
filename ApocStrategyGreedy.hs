@@ -43,16 +43,16 @@ greedyPawnPlacement :: Board -> Player -> IO (Maybe [(Int,Int)])
 greedyPawnPlacement board player = do
   let pieces = getAllPieces board player
   let validMoves = filter (\x -> validPawnPlacement board player x) pieces
-  if (length validMoves > 0 ) then return $ Just ([head validMoves]) else return Nothing
+  if (length validMoves > 0 ) then return $ Just ([snd $ head $ getPossibleMove board player validMoves]) else return Nothing
 
 
 
 validPawnPlacement :: Board -> Player -> (Int, Int) -> Bool
 validPawnPlacement board player (x,y) = if (player == Black)
-                                        then  if (x == 0 && ((checkKnightCount board player) < 2))
+                                        then  if (x == 0 && ((checkKnightCount board player) < 2) && (getFromBoard board (x,y) == BP))
                                               then True
                                               else False
-                                        else  if (x == 4 && ((checkKnightCount board player) < 2))
+                                        else  if (x == 4 && ((checkKnightCount board player) < 2) && (getFromBoard board (x,y) == WP))
                                               then True
                                               else False
 
@@ -91,6 +91,12 @@ getAllPossibleMoves board player =
       moves = getMovesFromPieces board pieces
       validMoves = filter (\x -> isValidPlay board player (fst x) (snd x)) moves
   in validMoves
+
+getPossibleMove :: Board -> Player -> [(Int, Int)] -> [Move]
+getPossibleMove board player piece=
+      let moves = getMovesFromPieces board piece
+          validMoves = filter (\x -> isValidPlay board player (fst x) (snd x)) moves
+      in validMoves
 
 getAllPieces :: Board -> Player -> [(Int, Int)]
 getAllPieces board Black = getInGrid (\x -> x == BK || x == BP) board 0
