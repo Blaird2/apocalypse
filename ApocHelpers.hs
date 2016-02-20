@@ -11,14 +11,14 @@ import ApocTools
 isValidPlay :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isValidPlay board player from to
     | getCellFrom == '_' = False
-    | playerOf pieceFrom == player && (pieceFrom == WhitePawn || pieceFrom == BlackPawn) =
+    | playerOf pieceFrom == player && (pieceFromCell == WP || pieceFromCell == BP) =
         isPawnMoveValid board player from to
-    | playerOf pieceFrom == player && (pieceFrom == WhiteKnight || pieceFrom == BlackKnight) =
+    | playerOf pieceFrom == player && (pieceFromCell == WK || pieceFromCell == BK) =
         isKnightMoveValid board player from to
     | otherwise = False
     where pieceFrom = pieceOf $ getFromBoard board from
-          pieceTo = pieceOf $ getFromBoard board to
           getCellFrom = cell2Char $ getFromBoard board from
+          pieceFromCell = getFromBoard board from
 
 -- | Returns whether the pawn placement was a valid move
 isValidPlacePawn :: Board -> (Int, Int) -> Bool
@@ -28,14 +28,17 @@ isValidPlacePawn board x = getFromBoard board x == E
 isPawnMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
 isPawnMoveValid board player (fromX, fromY) to
        | (to == (fromX, fromY + forwards)) && (getCellTo == '_') = True
-       | to == (fromX + 1, fromY + forwards) && playerOf pieceTo /= player = True
-       | to == (fromX - 1, fromY + forwards) && playerOf pieceTo /= player = True
+       | to == (fromX + 1, fromY + forwards) && (notSamePlayer) = True
+       | to == (fromX - 1, fromY + forwards) && (notSamePlayer) = True
        | otherwise = False
        where forwards = case player of
                Black -> -1
                White -> 1
-             pieceTo = pieceOf $ getFromBoard board to
              getCellTo = cell2Char $ getFromBoard board to
+             pieceToCell = getFromBoard board to
+             notSamePlayer = if (player == Black) 
+                            then ((pieceToCell == WK) || (pieceToCell == WP)) 
+                            else ((pieceToCell == BK) || (pieceToCell == BP))
 
 -- | Determines the validity of a knight movement
 isKnightMoveValid :: Board -> Player -> (Int, Int) -> (Int, Int) -> Bool
