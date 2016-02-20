@@ -32,7 +32,7 @@ human state play player = if (play == PawnPlacement) then doPawnPlacementMove st
 doPawnPlacementMove :: GameState -> Player -> IO (Maybe [(Int,Int)])
 doPawnPlacementMove state player = do
   let playerStr = if (player == White) then "W" else "B"
-  putStrLn ("Enter the coordinates to place the pawn for player " ++ (show player) ++" in the form 'destX destY':\n [0 >= n >= 4]" ++ playerStr ++"2: ")
+  putStrLn ("Enter the coordinates to place the pawn for player " ++ (show player) ++" in the form 'destX destY':\n[0 >= n >= 4]" ++ playerStr ++"1:")
   move <- getLine
   let moveInt = convertMovetoIntList 2 move
   if (length moveInt == length (filter rangeChecker moveInt) && length moveInt == 2) || length moveInt == 0
@@ -53,7 +53,7 @@ doPawnPlacementMove state player = do
 doNormalMove ::  GameState -> Player -> IO (Maybe [(Int,Int)])
 doNormalMove state player = do
   let playerStr = if (player == White) then "W" else "B"
-  putStrLn ("Enter the move coordinates for player "++ (show player) ++" in the form 'srcX srcY destX destY'\n (0 >= n >= 4, or just enter return for a 'pass') " ++ playerStr ++"2: ")
+  putStrLn ("Enter the move coordinates for player "++ (show player) ++" in the form 'srcX srcY destX destY'\n[0 >= n >= 4, or just enter return for a 'pass'] " ++ playerStr ++"2:")
   move <- getLine
   let moveInt = convertMovetoIntList 4 move
   if (length moveInt == length (filter rangeChecker moveInt) && length moveInt == 4) || length moveInt == 0
