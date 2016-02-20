@@ -54,10 +54,10 @@ main' args
         putStrLn $ show initBoard
         gameLoop initBoard (fst (fst strategies)) (fst (snd strategies)) (snd (fst strategies)) (snd (snd strategies))
     | lenArgs == 2 = do
-        bStrat <- strategyFromName (head args)
-        wStrat <- strategyFromName (last args)
+        bStrat <- strategyFromName (map toLower (head args))
+        wStrat <- strategyFromName (map toLower (last args))
         putStrLn $ show initBoard
-        gameLoop initBoard bStrat wStrat (head args) (last args)
+        gameLoop initBoard bStrat wStrat (map toLower (head args)) (map toLower (last args))
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
 
@@ -90,8 +90,8 @@ readStrategy player = do
     putStrLn ("Enter the strategy for "++player++":")
     stratName <- getLine
     strategy <- strategyFromName (map toLower stratName)
-    putStrLn stratName
-    return (strategy, stratName)
+    putStrLn (map toLower stratName)
+    return (strategy, map toLower stratName)
 
 -- | The game loop; plays out a full game using two given strategies, printing a trace as it runs, and ending once the game is over
 gameLoop :: GameState -> Chooser -> Chooser -> String -> String -> IO ()
@@ -153,13 +153,14 @@ nextGameState state (bMove, wMove) = GameState
 -- | Applying the Moves On the board
 applyOnBoard :: Board -> Played -> Played -> Board
 applyOnBoard board playedB playedW
-        | (isClash playedB playedW) || (isSwap playedB playedW) = applyOnBoard' board playedB playedW
+        | (isClash playedB playedW) || (isSwap playedB playedW) || (isWhiteFirst playedB playedW) = applyOnBoard' board playedB playedW
         | otherwise = applyOnPlayer (applyOnPlayer board playedB) playedW
 
 -- | Called when there are clashes or swapped pieces that require special handling
 applyOnBoard' :: Board -> Played -> Played -> Board
 applyOnBoard' board (Played (fromB,toB)) (Played (fromW,toW))
         | (fromB == toW) && (toB == fromW)                                    = replaceSwapElements board fromB toB
+        | (toB == fromW)                                                      = replaceElements (replaceElements board fromW toW) fromB toB
         | (pieceFromB == BlackKnight) && (pieceFromW == WhiteKnight) && clash = replaceClashElements (replaceClashElements board fromB toB) fromW toW
         | (pieceFromB == BlackPawn) && (pieceFromW == WhitePawn) && clash     = replaceClashElements (replaceClashElements board fromB toB) fromW toW
         | (pieceFromB == BlackKnight) && (pieceFromW == WhitePawn) && clash   = replaceElements (replaceElements board fromW toW) fromB toB
@@ -171,6 +172,11 @@ applyOnBoard' board (Played (fromB,toB)) (Played (fromW,toW))
 applyOnboard' board (PlacedPawn (fromB, toB)) (PlacedPawn (fromW, toW))
         | (toB == toW) = replaceClashElements (replaceClashElements board fromB toB) fromW toW
         | otherwise = replaceElements (replaceElements board fromW toW) fromB toB
+
+-- | Checking if it is neccessary to apply white moves first
+isWhiteFirst :: Played -> Played -> Bool
+isWhiteFirst (Played (fromB, toB)) (Played (fromW,toW)) = if (toB == fromW) then True else False
+isWhiteFirst _ _ = False
 
 -- | Given the moves, checks whether there is a need to swap the pieces
 isSwap :: Played -> Played -> Bool
@@ -216,9 +222,9 @@ isGameOver state (bMove, wMove)
 -- | The Format to display the Game Over Message
 gameOverMessage :: GameState -> String -> String -> String
 gameOverMessage state pBStrat pWStrat
-         | (count2 (theBoard state) WP == 0) && (count2 (theBoard state) WP == 0) = "All Pawns Destroyed! Draw"
          | (whitePen state >= 2) || bPawns > wPawns = "Black wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
          | (blackPen state >= 2) || wPawns > bPawns = "White wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
+         | (count2 (theBoard state) WP == 0) && (count2 (theBoard state) WP == 0) = "All Pawns Destroyed! Draw"
          | otherwise = "Everyone Passed! Draw"
         where bPawns = count2 (theBoard state) BP
               wPawns = count2 (theBoard state) WP
