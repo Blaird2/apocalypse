@@ -52,12 +52,12 @@ main' args
     | lenArgs == 0 = do
         strategies <- readStrategies
         putStrLn $ show initBoard
-        gameLoop initBoard (fst strategies) (snd strategies)
+        gameLoop initBoard (fst (fst strategies)) (fst (snd strategies)) (snd (fst strategies)) (snd (snd strategies))
     | lenArgs == 2 = do
         bStrat <- strategyFromName (head args)
         wStrat <- strategyFromName (last args)
         putStrLn $ show initBoard
-        gameLoop initBoard bStrat wStrat
+        gameLoop initBoard bStrat wStrat (head args) (last args)
     | otherwise = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
     where lenArgs = length args
 
@@ -76,7 +76,7 @@ strategyFromName "greedy" = return greedy
 strategyFromName _ = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
 
 -- | Queries for and reads the two strategies to be used from the command line
-readStrategies :: IO (Chooser, Chooser)
+readStrategies :: IO ((Chooser, String), (Chooser, String))
 readStrategies = do
     putStrLn "Possible Strategies:"
     putStr prtStrategyListFormat
@@ -85,21 +85,21 @@ readStrategies = do
     return (bStrat, wStrat)
 
 -- | Queries for and reads a strategy from the command line
-readStrategy :: String -> IO Chooser
+readStrategy :: String -> IO (Chooser, String)
 readStrategy player = do
     putStrLn ("Enter the strategy for "++player++":")
     stratName <- getLine
     strategy <- strategyFromName (map toLower stratName)
     putStrLn stratName
-    return strategy
+    return (strategy, stratName)
 
 -- | The game loop; plays out a full game using two given strategies, printing a trace as it runs, and ending once the game is over
-gameLoop :: GameState -> Chooser -> Chooser -> IO ()
-gameLoop state bStrat wStrat = do
+gameLoop :: GameState -> Chooser -> Chooser -> String -> String -> IO ()
+gameLoop state bStrat wStrat bPStrat wPStrat = do
     input <- getInput state bStrat wStrat
     let newState = nextGameState state input
     putStrLn $ show newState
-    if isGameOver newState input then putStrLn (gameOverMessage newState bStrat wStrat) else gameLoop newState bStrat wStrat
+    if isGameOver newState input then putStrLn (gameOverMessage newState bPStrat wPStrat) else gameLoop newState bStrat wStrat bPStrat wPStrat
 
 -- | Reads the next moves from the strategies, and converts them into Played values, checking if they were valid
 getInput :: GameState -> Chooser -> Chooser -> IO (Played, Played)
@@ -214,18 +214,14 @@ isGameOver state (bMove, wMove)
          | otherwise = False
 
 -- | The Format to display the Game Over Message
-gameOverMessage :: GameState -> Chooser -> Chooser -> String
-gameOverMessage state bStrat wStrat
-         | (whitePen state >= 2) || (count2 (theBoard state) WP == 0) = "Black wins!  Black ("++prtStrat bStrat++"): "++bPawns++"  White ("++prtStrat wStrat++"): "++wPawns
-         | (blackPen state >= 2) || (count2 (theBoard state) BP == 0) = "White wins!  Black ("++prtStrat bStrat++"): "++bPawns++"  White ("++prtStrat wStrat++"): "++wPawns
+gameOverMessage :: GameState -> String -> String -> String
+gameOverMessage state pBStrat pWStrat
+         | (count2 (theBoard state) WP == 0) && (count2 (theBoard state) WP == 0) = "All Pawns Destroyed! Draw"
+         | (whitePen state >= 2) || bPawns > wPawns = "Black wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
+         | (blackPen state >= 2) || wPawns > bPawns = "White wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
          | otherwise = "Everyone Passed! Draw"
-        where bPawns = show $ count2 (theBoard state) BP
-              wPawns = show $ count2 (theBoard state) WP
-
--- | Converts the passed in strategy to the coresponding string
-prtStrat :: Chooser -> String
-prtStrat human = "human"
-prtStrat greedy = "greedy"
+        where bPawns = count2 (theBoard state) BP
+              wPawns = count2 (theBoard state) WP
 
 -- | Determines which player has won; 'Nothing' means a draw if isGameOver is true, otherwise it means the game isn't over yet
 getWinner :: GameState -> (Played, Played) -> Maybe Player
