@@ -43,8 +43,10 @@ pickMove moves =  do
                   chance <- randomRIO (1, 100) :: IO Int
                   (index, element) <- pickRandomMove moves
                   if (chance > 90)
-                    then let move = ((getSortedMovesbyInt moves index) !! element) in return $ Just [fst move, snd move]
-                      else makeMove moves
+                  then if (index < 0 || element < 0)
+                      then return Nothing
+                      else let move = ((getSortedMovesbyInt moves index) !! element) in return $ Just [fst move, snd move]
+                  else makeMove moves
 
 
 
