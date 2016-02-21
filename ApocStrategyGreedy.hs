@@ -20,8 +20,8 @@ import Data.Maybe (fromJust, isNothing)
 import System.IO.Unsafe
 import ApocTools
 import ApocHelpers
+import System.Random
 
---import System.Random
 
 type Move = ((Int, Int), (Int, Int))
 data SortedMoves = SortedMoves {emptyMoves  :: [Move],
@@ -62,17 +62,23 @@ checkKnightCount board player = count2 board (if (player == Black) then BK else 
 
 pickMove :: SortedMoves -> IO (Maybe [(Int, Int)])
 pickMove moves
-  | length (knightMoves moves) > 0 = let move = head (knightMoves moves) in return $ Just [fst move, snd move]
-  | length (pawnMoves moves)   > 0 = let move = head (pawnMoves moves)   in return $ Just [fst move, snd move]
-  | length (emptyMoves moves)  > 0 = let move = head (emptyMoves moves)  in return $ Just [fst move, snd move]
+  | length (knightMoves moves) > 0 = do
+                                      move <- pickRandom (knightMoves moves)
+                                      return $ Just [fst move, snd move]
+  | length (pawnMoves moves)   > 0 = do
+                                      move <- pickRandom (pawnMoves moves)
+                                      return $ Just [fst move, snd move]
+  | length (emptyMoves moves)  > 0 = do
+                                      move <- pickRandom (emptyMoves moves)
+                                      return $ Just [fst move, snd move]
   | otherwise = return $ Nothing
 
-{-}
+
 pickRandom ::  [a] -> IO a
 pickRandom list = do
-  index <- getStdRandom (randomR, (0, (length list) -1))
+  index <- randomRIO (0, (length list)-1)
   return (list !! index)
--}
+
 
 sortMoves :: Board -> [Move] -> SortedMoves
 sortMoves _ [] = SortedMoves [] [] []
