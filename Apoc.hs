@@ -35,6 +35,7 @@ import System.IO.Unsafe
 import ApocTools
 import ApocStrategyHuman
 import ApocStrategyGreedy
+import ApocStrategyRandom
 import ApocHelpers
 
 ---Main-------------------------------------------------------------
@@ -67,12 +68,13 @@ main' args
 -- | Returns the printable list of available strategies
 prtStrategyListFormat :: String
 prtStrategyListFormat = (foldr (++) "" ((map (\x -> "  "++x++"\n") strategyList)))
-    where strategyList = ["human", "greedy"]
+    where strategyList = ["human", "greedy", "random"]
 
 -- | Converts a name to the respective strategy
 strategyFromName :: String -> IO Chooser
 strategyFromName "human" = return human
 strategyFromName "greedy" = return greedy
+strategyFromName "random" = return random
 strategyFromName _ = die ("Invalid Strategies, Possible Strategies are:\n" ++ prtStrategyListFormat)
 
 -- | Queries for and reads the two strategies to be used from the command line
