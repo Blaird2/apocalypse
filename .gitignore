@@ -3,4 +3,4 @@
 *.exe
 Apoc
 
-test/test.hs
+test/*

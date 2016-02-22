@@ -1,28 +1,21 @@
-{- | This module is used for CPSC 449 for the Apocalypse assignment.
+{- |
+Module      : ApocStrategyHuman
+Description : Module filled with functions related to a human playing.
+Maintainer  : Team Twenty Two
+Stability   : beta (stable, but bugs can be present)
+Portability : ghc 7.10.2 - 7.10.3
 
-This is merely a skeleton to get you started.  It has VERY little functionality.
-
-Copyright: Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
-Permission to use, copy, modify, distribute and sell this software
-and its documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation. The University of Calgary makes no representations about the
-suitability of this software for any purpose. It is provided "as is" without
-express or implied warranty.
+This module is used for CPSC 449 for the Apocalypse assignment.
 
 -}
 
 module ApocStrategyHuman where
 
+import ApocTools
 import Control.Monad.Trans.State.Lazy
 import Data.Maybe (fromJust, isNothing)
 import System.IO.Unsafe
-import ApocTools
-
-{- | This is just a placeholder for the human strategy: it always chooses to play
-     (0,0) to (2,1).
--}
+-- | Main function. causes move to happen based on turn type
 human    :: Chooser
 human state play player = if (play == PawnPlacement) then doPawnPlacementMove state player else (doNormalMove state player)
 
@@ -58,7 +51,6 @@ doNormalMove state player = do
   let moveInt = convertMovetoIntList 4 move
   if (length moveInt == length (filter rangeChecker moveInt) && length moveInt == 4) || length moveInt == 0
     then do
-        putStrLn ("Valid coordinates")
         return (listReturn moveInt)
     else if (length (filter rangeChecker (moveInt)) < 4)
         then do

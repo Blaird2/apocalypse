@@ -1,6 +1,6 @@
 {- |
 Module      : Main
-Description : Template to get you started on the CPSC 449 Winter 2016 Apocalypse assignment.
+Description : The game loop is contained in here as well as any checks required for moves and penalty points
 Copyright   : Copyright 2016, Rob Kremer (rkremer@ucalgary.ca), University of Calgary.
 License     : Permission to use, copy, modify, distribute and sell this software
               and its documentation for any purpose is hereby granted without fee, provided
@@ -14,9 +14,6 @@ Stability   : experimental
 Portability : ghc 7.10.2 - 7.10.3
 
 This module is used for CPSC 449 for the Apocalypse assignment.
-
-Feel free to modify this file as you see fit.
-
 -}
 
 module Main (

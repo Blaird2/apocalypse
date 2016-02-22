@@ -1,5 +1,13 @@
+{- |
+Module      : ApocStrategyRandom
+Description : Module filled with functions related to making the random AI work
+Maintainer  : Team Twenty Two
+Stability   : beta (stable, but bugs can be present)
+Portability : ghc 7.10.2 - 7.10.3
 
+This module is used for CPSC 449 for the Apocalypse assignment.
 
+-}
 
 module ApocStrategyRandom where
 
@@ -32,16 +40,16 @@ pickRandomMove moves = do
                       -- | There probably is an easier way to do this function then this.
                       -- | Gets a random number for each of the elements, between their length and 0
                       indextoStart <- randomRIO (0, 2) -- ^ Random start not nessarily on knights
-                      element1 <- randomRIO (0, (length (getSortedMovesbyInt moves 0))-1)
-                      element2 <- randomRIO (0, (length (getSortedMovesbyInt moves 1))-1)
-                      element3 <- randomRIO (0, (length (getSortedMovesbyInt moves 2))-1)
+                      element1 <- randomRIO (0, (length (getSortedMovesbyInt moves ((indextoStart) `mod` 2)))-1)
+                      element2 <- randomRIO (0, (length (getSortedMovesbyInt moves ((indextoStart+1) `mod` 2)))-1)
+                      element3 <- randomRIO (0, (length (getSortedMovesbyInt moves ((indextoStart+2) `mod` 2)))-1)
                       -- | Tries to make a random move, started with knights and working its way down.
                       if (length (getSortedMovesbyInt moves ((indextoStart) `mod` 2)) > 0)
-                      then return (0, element1)
+                      then return (((indextoStart) `mod` 2), element1)
                       else  if (length (getSortedMovesbyInt moves ((indextoStart+1) `mod` 2)) > 0)
-                            then return (1, element2)
+                            then return (((indextoStart+1) `mod` 2), element2)
                             else  if (length (getSortedMovesbyInt moves ((indextoStart+2) `mod` 2)) > 0)
-                                  then return (2, element3)
+                                  then return (((indextoStart+2) `mod` 2), element3)
                                   else return  (-1, -1) -- ^ If no move can be played, returns (-1, -1)
 
 -- | Lets make the move!

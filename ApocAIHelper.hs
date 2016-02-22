@@ -1,12 +1,22 @@
+{- |
+Module      : ApocAIHelper
+Description : Module filled with helper functions related to the operation of AI.
+Maintainer  : Team Twenty Two
+Stability   : beta (stable, but bugs can be present)
+Portability : ghc 7.10.2 - 7.10.3
+
+This module is used for CPSC 449 for the Apocalypse assignment.
+
+-}
+
 module ApocAIHelper where
 
-import Control.Monad.Trans.State.Lazy
-import Data.Maybe (fromJust, isNothing)
-import System.IO.Unsafe
 import ApocTools
 import ApocHelpers
 import System.Random
-
+import Control.Monad.Trans.State.Lazy
+import Data.Maybe (fromJust, isNothing)
+import System.IO.Unsafe
 -- | This type is used to define moves, primarily for ease of typing
 type Move = ((Int, Int), (Int, Int))
 -- | SortedMoves is a data structure that allows us to sort the types of moves very easily
