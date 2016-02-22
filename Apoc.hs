@@ -221,9 +221,10 @@ isGameOver state (bMove, wMove)
 -- | The Format to display the Game Over Message
 gameOverMessage :: GameState -> String -> String -> String
 gameOverMessage state pBStrat pWStrat
+         | (bPawns == 0) && (wPawns == 0) = "All Pawns Destroyed! Draw"
+         | (bPawns == wPawns) && (whitePen state >= 2) && (blackPen state >= 2) = "Same Amount of Pawns! Draw"
          | (whitePen state >= 2) || bPawns > wPawns = "Black wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
          | (blackPen state >= 2) || wPawns > bPawns = "White wins!  Black ("++pBStrat++"): "++show bPawns++"  White ("++pWStrat++"): "++show wPawns
-         | (count2 (theBoard state) WP == 0) && (count2 (theBoard state) WP == 0) = "All Pawns Destroyed! Draw"
          | otherwise = "Everyone Passed! Draw"
         where bPawns = count2 (theBoard state) BP
               wPawns = count2 (theBoard state) WP
