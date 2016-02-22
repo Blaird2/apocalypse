@@ -51,6 +51,7 @@ doNormalMove state player = do
   let moveInt = convertMovetoIntList 4 move
   if (length moveInt == length (filter rangeChecker moveInt) && length moveInt == 4) || length moveInt == 0
     then do
+        putStrLn move
         return (listReturn moveInt)
     else if (length (filter rangeChecker (moveInt)) < 4)
         then do
